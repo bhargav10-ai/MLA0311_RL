@@ -1,0 +1,23 @@
+import random, math
+
+class Node:
+    def __init__(self,x,y,p=None): self.x=x; self.y=y; self.p=p
+
+def dist(a,b): return math.hypot(a.x-b.x,a.y-b.y)
+
+def rrt(start,goal):
+    T=[start]
+    for _ in range(300):
+        r=Node(random.randint(0,100),random.randint(0,100))
+        n=min(T,key=lambda x:dist(x,r))
+        th=math.atan2(r.y-n.y,r.x-n.x)
+        new=Node(n.x+5*math.cos(th), n.y+5*math.sin(th), n)
+        T.append(new)
+        if dist(new,goal)<5:
+            goal.p=new; T.append(goal); break
+    return T
+
+s=Node(10,10)
+g=Node(90,90)
+rrt(s,g)
+print("RRT done")
