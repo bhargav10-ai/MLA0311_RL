@@ -1,0 +1,30 @@
+# TD(0) Reinforcement Learning Example
+
+# States
+states = ['A', 'B', 'C', 'Terminal']
+
+# Initialize value function V(s) = 0 for all states
+V = {state: 0.0 for state in states}
+
+# Learning parameters
+alpha = 0.1   # learning rate
+gamma = 0.9   # discount factor
+
+# Sample episodes (state, reward, next_state)
+episodes = [
+    [('A', 0, 'B'), ('B', 0, 'C'), ('C', 1, 'Terminal')],
+    [('A', 0, 'B'), ('B', 1, 'Terminal')],
+    [('A', 0, 'C'), ('C', 1, 'Terminal')]
+]
+
+# TD(0) Algorithm
+for episode in episodes:
+    for state, reward, next_state in episode:
+        td_target = reward + gamma * V[next_state]
+        td_error = td_target - V[state]
+        V[state] = V[state] + alpha * td_error
+
+# Display learned state values
+print("Learned State Values:")
+for state in V:
+    print(f"V({state}) = {V[state]:.3f}")
