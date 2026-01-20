@@ -1,0 +1,40 @@
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.distributions import Categorical
+
+# Simple Actor-Critic
+class PPO(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.actor = nn.Sequential(nn.Linear(4, 32), nn.ReLU(), nn.Linear(32, 2), nn.Softmax(dim=-1))
+        self.critic = nn.Sequential(nn.Linear(4, 32), nn.ReLU(), nn.Linear(32, 1))
+        self.opt = optim.Adam(self.parameters(), lr=0.002)
+
+    def forward(self, s):
+        return self.actor(s), self.critic(s)
+
+# PPO Update
+model = PPO()
+state = torch.rand(4)
+probs, value = model(state)
+dist = Categorical(probs)
+action = dist.sample()
+
+reward = torch.tensor(1.0)
+gamma = 0.99
+eps = 0.2
+
+advantage = reward - value.detach()
+ratio = torch.exp(dist.log_prob(action) - dist.log_prob(action).detach())
+
+loss = -torch.min(
+    ratio * advantage,
+    torch.clamp(ratio, 1-eps, 1+eps) * advantage
+)
+
+model.opt.zero_grad()
+loss.backward()
+model.opt.step()
+
+print("PPO step done")
