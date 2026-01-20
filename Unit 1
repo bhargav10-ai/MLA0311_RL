@@ -1,0 +1,74 @@
+import numpy as np
+import random
+
+# Grid size
+GRID_SIZE = 5
+
+# Actions
+ACTIONS = ['UP', 'DOWN', 'LEFT', 'RIGHT']
+
+# Q-table: (x, y, action)
+Q = np.zeros((GRID_SIZE, GRID_SIZE, len(ACTIONS)))
+
+# Learning parameters
+alpha = 0.1
+gamma = 0.9
+epsilon = 0.2
+episodes = 500
+
+# Positions
+START = (0, 0)
+PICKUP = (2, 2)
+DROP = (4, 4)
+
+def move(state, action):
+    x, y = state
+
+    if action == 'UP' and x > 0:
+        x -= 1
+    elif action == 'DOWN' and x < GRID_SIZE - 1:
+        x += 1
+    elif action == 'LEFT' and y > 0:
+        y -= 1
+    elif action == 'RIGHT' and y < GRID_SIZE - 1:
+        y += 1
+
+    return (x, y)
+
+for _ in range(episodes):
+    state = START
+    carrying_item = False
+
+    while True:
+        # ε-greedy action selection
+        if random.random() < epsilon:
+            action_index = random.randint(0, len(ACTIONS) - 1)
+        else:
+            action_index = np.argmax(Q[state[0], state[1]])
+
+        action = ACTIONS[action_index]
+        next_state = move(state, action)
+
+        reward = -1
+
+        if next_state == PICKUP and not carrying_item:
+            reward = 10
+            carrying_item = True
+
+        if next_state == DROP and carrying_item:
+            reward = 20
+
+        # Q-learning update
+        Q[state[0], state[1], action_index] += alpha * (
+            reward
+            + gamma * np.max(Q[next_state[0], next_state[1]])
+            - Q[state[0], state[1], action_index]
+        )
+
+        state = next_state
+
+        # End episode after successful drop
+        if state == DROP and carrying_item:
+            break
+
+print("✅ Training completed without errors.")
