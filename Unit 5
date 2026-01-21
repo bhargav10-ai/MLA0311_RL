@@ -1,0 +1,60 @@
+import random
+
+# ----- Environment -----
+class SimpleEnv:
+    def __init__(self):
+        self.state = 0  # 0 = start, 1 = mid, 2 = goal
+
+    def step(self, action):
+        if action == "move":
+            self.state += 1
+        reward = 1 if self.state == 2 else 0
+        done = self.state == 2
+        return self.state, reward, done
+
+    def reset(self):
+        self.state = 0
+        return self.state
+
+
+# ----- MAXQ Node -----
+class MAXQNode:
+    def __init__(self, name, actions):
+        self.name = name
+        self.Q = {a: 0.0 for a in actions}
+
+    def select_action(self):
+        return max(self.Q, key=self.Q.get)
+
+    def update(self, action, reward, alpha=0.1):
+        self.Q[action] += alpha * (reward - self.Q[action])
+
+
+# ----- MAXQ Agent -----
+class MAXQAgent:
+    def __init__(self):
+        self.navigate = MAXQNode("Navigate", ["move"])
+        self.root = MAXQNode("Root", ["navigate"])
+
+    def run_episode(self, env):
+        state = env.reset()
+        done = False
+        total_reward = 0
+
+        while not done:
+            action = self.navigate.select_action()
+            state, reward, done = env.step(action)
+            self.navigate.update(action, reward)
+            total_reward += reward
+
+        self.root.update("navigate", total_reward)
+        return total_reward
+
+
+# ----- Training -----
+env = SimpleEnv()
+agent = MAXQAgent()
+
+for episode in range(10):
+    reward = agent.run_episode(env)
+    print(f"Episode {episode + 1}, Reward: {reward}")
